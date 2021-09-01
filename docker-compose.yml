@@ -1,0 +1,106 @@
+version: '3'
+services:
+  lb:
+      image: haproxy
+      ports:
+          - "8080:8080"
+      volumes:
+          - ./haproxy:/usr/local/etc/haproxy
+  nodecontroller1:
+      image: nodecontroller
+      environment:
+          - APPID=1111
+          - REVERSE_PROXY_URL=http://192.168.0.110:5000
+          - BUILD_V=1.1
+          - DB_USER=sa
+          - DB_PASSWORD=teamwork
+          - DB_NAME='users'
+  nodecontroller2:
+      image: nodecontroller
+      environment:
+          - APPID=2222 
+          - REVERSE_PROXY_URL=http://192.168.0.110:5000
+          - BUILD_V=1.1 
+          - DB_USER=sa
+          - DB_PASSWORD=teamwork
+          - DB_NAME=users
+  client:
+    build: './client/server'
+    ports:
+      - "3000:3000"
+    depends_on: 
+      - db
+    environment:
+      - MONGO_DB_URI=mongodb+srv://zizouLivreur:zizouLivreur@globalcluster.sodgj.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+      - PORT=3000
+
+  restaurateur:
+    build: './restaurateur/server'
+    ports:
+      - "3001:3000"
+    depends_on: 
+      - db
+    environment:
+      - MONGO_DB_URI=mongodb+srv://zizouLivreur:zizouLivreur@globalcluster.sodgj.mongodb.net/ProjetDominante?retryWrites=true&w=majority
+      - PORT=3000
+
+  livreur:
+    build: './livreur/server'
+    ports:
+      - "3002:3000"
+    depends_on: 
+      - db
+    environment:
+      - MONGO_DB_URI=mongodb+srv://zizouLivreur:zizouLivreur@globalcluster.sodgj.mongodb.net/ProjetDominante?retryWrites=true&w=majority
+      - PORT=3000
+
+  commercial:
+    build: './commercial/server'
+    ports:
+      - "3003:3000"
+    depends_on: 
+      - db
+    environment:
+      - MONGO_DB_URI=mongodb+srv://zizouLivreur:zizouLivreur@globalcluster.sodgj.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+      - PORT=3000
+
+  technique:
+    build: './technique/server'
+    ports:
+      - "3004:3000"
+    depends_on: 
+      - db
+    environment:
+      - MONGO_DB_URI=mongodb+srv://zizouLivreur:zizouLivreur@globalcluster.sodgj.mongodb.net/technique?retryWrites=true&w=majority
+      - PORT=3000
+
+  devtiers:
+    build: './devtiers/server'
+    ports:
+      - "3005:3000"
+    depends_on:
+      - db
+    environment:
+      - MONGO_DB_URI=mongodb+srv://zizouLivreur:zizouLivreur@globalcluster.sodgj.mongodb.net/ProjetDominante?retryWrites=true&w=majority
+      - PORT=3000
+  
+  db:
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./client/public:/srv/www/static
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - client
+      - restaurateur
+      - livreur
+      - commercial
+      - technique
+      - nodecontroller1
+      - nodecontroller2
